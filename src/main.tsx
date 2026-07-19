@@ -12,3 +12,4 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
     </AuthProvider>
   </React.StrictMode>
 );
+console.log(import.meta.env.VITE_GEMINI_API_KEY);
