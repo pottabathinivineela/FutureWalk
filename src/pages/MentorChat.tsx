@@ -1,33 +1,71 @@
-import { useState } from "react";
-import { askNova } from "../services/gemini";
-
 export default function MentorChat() {
-  const [question, setQuestion] = useState("");
-  const [answer, setAnswer] = useState("");
-
-  async function testAI() {
-    const reply = await askNova(
-      "Vineela",
-      "I am a third year CSE student. Suggest a roadmap to become an AI Engineer."
-    );
-
-    console.log(reply);
-
-    setAnswer(reply);
-  }
-
   return (
-    <div style={{ padding: 40 }}>
-      <h1>Nova AI Test</h1>
+    <div
+      style={{
+        height: "100vh",
+        background: "#0f172a",
+        color: "white",
+        display: "flex",
+        flexDirection: "column",
+      }}
+    >
+      <div
+  style={{
+    background: "#1e293b",
+    padding: "15px",
+    borderRadius: "12px",
+    width: "fit-content",
+    maxWidth: "70%",
+  }}
+>
+  👋 Hello Vineela!
 
-      <button onClick={testAI}>
-        Test Gemini
-      </button>
+  <br />
+  <br />
 
-      <br />
-      <br />
+  I'm Nova.
 
-      <pre>{answer}</pre>
+  <br />
+
+  Ask me anything about careers,
+  AI, coding,
+  internships,
+  resumes,
+  startups,
+  or hackathons.
+</div>
+<div
+  style={{
+    padding: "20px",
+    borderTop: "1px solid #374151",
+    display: "flex",
+    gap: "10px",
+  }}
+>
+  <input
+  placeholder="Ask Nova anything..."
+  style={{
+    flex: 1,
+    padding: "15px",
+    borderRadius: "10px",
+    border: "none",
+    outline: "none",
+    fontSize: "16px",
+  }}
+/>
+<button
+  style={{
+    background: "#7c3aed",
+    color: "white",
+    border: "none",
+    padding: "15px 25px",
+    borderRadius: "10px",
+    cursor: "pointer",
+  }}
+>
+  Send
+</button>
+</div>
     </div>
   );
 }
