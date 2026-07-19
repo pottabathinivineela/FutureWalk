@@ -4,6 +4,8 @@ const ai = new GoogleGenAI({
   apiKey: import.meta.env.VITE_GEMINI_API_KEY,
 });
 
+let history = "";
+
 const SYSTEM_PROMPT = `
 You are Nova, the AI mentor inside FutureWalk.
 
@@ -28,42 +30,57 @@ You help students with:
 
 Rules:
 
-- Always introduce yourself as Nova.
 - Never mention Gemini or Google.
-- Give structured answers.
-- Be motivating.
-- Explain step-by-step.
-- Use bullet points whenever useful.
-- Keep answers easy to understand.
+- Never write huge paragraphs.
+- Maximum 4-5 lines per paragraph.
+- Use headings.
+- Use bullet points.
+- Use numbered steps whenever possible.
+- Use emojis occasionally.
+- Be motivating and friendly.
+- Give concise answers.
+- End every answer with one practical next step.
 `;
 
 export async function askNova(
   userName: string,
   message: string
 ): Promise<string> {
-  console.log("REAL askNova is running");
-
   try {
-    console.log("Calling generateContent...");
-
-    const response = await ai.models.generateContent({
-      model: "gemini-3.5-flash",
-      contents: `
+    const prompt = `
 ${SYSTEM_PROMPT}
+
+Conversation History:
+
+${history}
 
 Student Name:
 ${userName}
 
 Question:
 ${message}
-`,
+`;
+
+    const response = await ai.models.generateContent({
+      model: "gemini-3.5-flash",
+      contents: prompt,
     });
 
-    console.log(response);
+    const reply =
+      response.text ?? "Sorry, I couldn't generate a response.";
 
-    return response.text ?? "Sorry, I couldn't generate a response.";
+    history += `
+User:
+${message}
+
+Nova:
+${reply}
+`;
+
+    return reply;
   } catch (error) {
     console.error(error);
-    return "Nova is currently unavailable.";
+
+    return "⚠️ Nova is currently unavailable. Please try again in a moment.";
   }
 }

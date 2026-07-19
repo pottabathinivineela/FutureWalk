@@ -1,146 +1,123 @@
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { askNova } from "../services/gemini";
 
+import ChatHeader from "../components/ChatHeader";
+import ChatBubble from "../components/ChatBubble";
+import ChatInput from "../components/ChatInput";
+import TypingIndicator from "../components/TypingIndicator";
+import SuggestionChips from "../components/SuggestionChips";
+
+type Message = {
+  sender: "user" | "nova";
+  text: string;
+};
+
 export default function MentorChat() {
-  const [messages, setMessages] = useState([
+  const [messages, setMessages] = useState<Message[]>([
     {
       sender: "nova",
       text:
-        "👋 Hello Vineela!\n\nI'm Nova.\nAsk me anything about careers, AI, coding, internships, resumes, startups or hackathons.",
+        "👋 Hello!\n\nI'm Nova, your personal AI mentor.\nAsk me anything about careers, AI, coding, resumes, internships, startups or hackathons.",
     },
   ]);
 
   const [question, setQuestion] = useState("");
   const [loading, setLoading] = useState(false);
 
-  async function sendMessage() {
-    if (!question.trim()) return;
+  // Auto Scroll Reference
+  const bottomRef = useRef<HTMLDivElement>(null);
 
-    const userQuestion = question;
+  useEffect(() => {
+    bottomRef.current?.scrollIntoView({
+      behavior: "smooth",
+    });
+  }, [messages, loading]);
+
+  async function sendMessage(customMessage?: string) {
+    const message = customMessage ?? question;
+
+    if (!message.trim()) return;
 
     setQuestion("");
 
+    // Add user message
     setMessages((prev) => [
       ...prev,
       {
         sender: "user",
-        text: userQuestion,
+        text: message,
       },
     ]);
 
     setLoading(true);
 
-    const reply = await askNova("Vineela", userQuestion);
+    try {
+      const reply = await askNova("Vineela", message);
+
+      setMessages((prev) => [
+        ...prev,
+        {
+          sender: "nova",
+          text: reply,
+        },
+      ]);
+    } catch (err) {
+      console.error(err);
+
+      setMessages((prev) => [
+        ...prev,
+        {
+          sender: "nova",
+          text:
+            "Sorry, I couldn't generate a response right now.",
+        },
+      ]);
+    }
 
     setLoading(false);
-
-    setMessages((prev) => [
-      ...prev,
-      {
-        sender: "nova",
-        text: reply,
-      },
-    ]);
   }
 
   return (
     <div
       style={{
-        minHeight: "100vh",
-        background: "#0f172a",
-        color: "white",
+        height: "100vh",
         display: "flex",
         flexDirection: "column",
+        background: "#0f172a",
       }}
     >
-      {/* Chat Area */}
+      <ChatHeader />
+
       <div
         style={{
           flex: 1,
-          padding: "30px",
           overflowY: "auto",
+          padding: "30px",
         }}
       >
-        {messages.map((msg, index) => (
-          <div
-            key={index}
-            style={{
-              display: "flex",
-              justifyContent:
-                msg.sender === "user"
-                  ? "flex-end"
-                  : "flex-start",
-              marginBottom: "20px",
-            }}
-          >
-            <div
-              style={{
-                background:
-                  msg.sender === "user"
-                    ? "#7c3aed"
-                    : "#1e293b",
-                padding: "15px",
-                borderRadius: "12px",
-                maxWidth: "70%",
-                whiteSpace: "pre-wrap",
-              }}
-            >
-              {msg.text}
-            </div>
-          </div>
-        ))}
-
-        {loading && (
-          <div
-            style={{
-              background: "#1e293b",
-              padding: "15px",
-              borderRadius: "12px",
-              width: "fit-content",
-            }}
-          >
-            🤖 Nova is typing...
-          </div>
-        )}
-      </div>
-
-      {/* Input Area */}
-      <div
-        style={{
-          padding: "20px",
-          borderTop: "1px solid #374151",
-          display: "flex",
-          gap: "10px",
-        }}
-      >
-        <input
-          value={question}
-          onChange={(e) => setQuestion(e.target.value)}
-          placeholder="Ask Nova anything..."
-          style={{
-            flex: 1,
-            padding: "15px",
-            borderRadius: "10px",
-            border: "none",
-            outline: "none",
-            fontSize: "16px",
-          }}
+        <SuggestionChips
+          onSelect={(text) => sendMessage(text)}
         />
 
-        <button
-          onClick={sendMessage}
-          style={{
-            background: "#7c3aed",
-            color: "white",
-            border: "none",
-            padding: "15px 25px",
-            borderRadius: "10px",
-            cursor: "pointer",
-          }}
-        >
-          Send
-        </button>
+        {messages.map((msg, index) => (
+          <ChatBubble
+            key={index}
+            sender={msg.sender}
+            text={msg.text}
+          />
+        ))}
+
+        {loading && <TypingIndicator />}
+
+        {/* Auto Scroll Target */}
+        <div ref={bottomRef}></div>
       </div>
+
+      <ChatInput
+        value={question}
+        onChange={setQuestion}
+        onSend={() => sendMessage()}
+      />
     </div>
   );
 }
